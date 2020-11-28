@@ -14,4 +14,4 @@ The default `Mon` struct is in `UsesMon.sol`. Contracts which want to access on-
 The underlying token is `XMON.sol`, a token with a fee on transfer, settable from 1 to 10%.
 
 ### Tests
-There is a comprehensive set of tests in `test/tests.js`. Test coverage is close to 100%, and the comments explain the cases being tested for. See `coverage.json`.
+There is a comprehensive set of tests in `test/tests.js`. Test coverage is close to 100%, and the comments explain the cases being tested for. See `coverage/`.
