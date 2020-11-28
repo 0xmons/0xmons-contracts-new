@@ -116,7 +116,7 @@ contract MonStaker is AccessControl {
     // award doom
     awardDoom(msg.sender);
 
-    // calculate how much to award
+    // calculate how much XMON to transfer back
     uint256 amountToTransfer = stakeRecords[msg.sender].amount;
 
     // remove stake records
@@ -139,6 +139,7 @@ contract MonStaker is AccessControl {
 
   // Awards accumulated doom and resets startBlock
   function awardDoom(address a) public {
+    // If there is an existing amount staked, add the current accumulated amount and reset the block number
     if (stakeRecords[a].amount != 0) {
       uint256 doomAmount = stakeRecords[a].amount.mul(block.number.sub(stakeRecords[a].startBlock));
       doomBalances[a] = doomBalances[a].add(doomAmount);
@@ -156,7 +157,7 @@ contract MonStaker is AccessControl {
 
     // check conditions
     require(doomBalances[msg.sender] >= doomFee, "Not enough DOOM");
-    require(block.number > nextSummonTime[msg.sender], "Time isn't up yet");
+    require(block.number >= nextSummonTime[msg.sender], "Time isn't up yet");
     require(numMons < maxMons, "All mons are out");
 
     // remove doom fee from caller's doom balance

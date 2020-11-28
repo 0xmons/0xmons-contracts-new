@@ -8,10 +8,12 @@ import "./IMonMinter.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract MonSpawner is AccessControl, UsesMon {
 
   using SafeMath for uint256;
+  using Strings for uint256;
 
   modifier onlyAdmin {
     require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Not admin");
@@ -30,8 +32,8 @@ contract MonSpawner is AccessControl, UsesMon {
 
   bytes32 public constant SPAWNER_ADMIN_ROLE = keccak256("SPAWNER_ADMIN_ROLE");
 
-  IERC20 xmon;
-  IMonMinter monMinter;
+  IERC20 public xmon;
+  IMonMinter public monMinter;
 
   // cost in XMON to spawn a monster
   uint256 public spawnFee;
@@ -43,13 +45,13 @@ contract MonSpawner is AccessControl, UsesMon {
   uint256 public extraDelay;
 
   // every pair of monsters can only spawn once
-  mapping(uint256 => mapping(uint256 => bool)) hasSpawned;
+  mapping(uint256 => mapping(uint256 => bool)) public hasSpawned;
 
   // block where a monster becomes usable for spawning again
-  mapping(uint256 => uint256) monUnlock;
+  mapping(uint256 => uint256) public monUnlock;
 
   // to be appended before the URI for the NFT
-  string prefixURI;
+  string public prefixURI;
 
   constructor() public {
     // Give caller admin permissions
@@ -59,7 +61,7 @@ contract MonSpawner is AccessControl, UsesMon {
   function spawnNewMon(uint256 mon1Id, uint256 mon2Id) public returns (uint256) {
     require(monMinter.ownerOf(mon1Id) == msg.sender, "Need to own mon1");
     require(monMinter.ownerOf(mon2Id) == msg.sender, "Need to own mon2");
-    require(!hasSpawned[mon1Id][mon2Id] && !hasSpawned[mon2Id][mon1Id], "Already spawned mon1 mon2");
+    require(!hasSpawned[mon1Id][mon2Id] && !hasSpawned[mon2Id][mon1Id], "Already spawned with mon1 mon2");
     require(block.number >= monUnlock[mon1Id], "mon1 isn't unlocked yet");
     require(block.number >= monUnlock[mon2Id], "mon2 isn't unlocked yet");
 
@@ -72,9 +74,9 @@ contract MonSpawner is AccessControl, UsesMon {
     Mon memory mon1 = monMinter.monRecords(mon1Id);
     Mon memory mon2 = monMinter.monRecords(mon2Id);
 
-    // update the unlock time of each mon to be initalDelay + (gen*extraDelay)
-    monUnlock[mon1Id] = initialDelay.add(extraDelay.mul(mon1.gen));
-    monUnlock[mon2Id] = initialDelay.add(extraDelay.mul(mon2.gen));
+    // update the unlock time of each mon to be current block + (initalDelay + ((gen-1)*extraDelay))
+    monUnlock[mon1Id] = block.number.add(initialDelay.add(extraDelay.mul(mon1.gen.sub(1))));
+    monUnlock[mon2Id] = block.number.add(initialDelay.add(extraDelay.mul(mon2.gen.sub(1))));
 
     // Set generation to be the lower of the two parents
     uint256 gen = mon1.gen.add(1);
@@ -94,7 +96,9 @@ contract MonSpawner is AccessControl, UsesMon {
       uint8(uint256(blockhash(block.number.sub(1)))).div(4).add(1)
     );
 
-    // update the URI
+    // update the URI of the new mon to be the prefix plus the id
+    string memory uri = string(abi.encodePacked(prefixURI, id.toString()));
+    monMinter.setTokenURI(id, uri);
 
     return(id);
   }
@@ -127,6 +131,10 @@ contract MonSpawner is AccessControl, UsesMon {
   function setMonMinter(address a) public onlyAdmin {
     require(address(monMinter) == address(0), "already set");
     monMinter = IMonMinter(a);
+  }
+
+  function setSpawnerAdminRole(address a) public onlyAdmin {
+    grantRole(SPAWNER_ADMIN_ROLE, a);
   }
 
   function moveTokens(address tokenAddress, address to, uint256 numTokens) public onlyAdmin {

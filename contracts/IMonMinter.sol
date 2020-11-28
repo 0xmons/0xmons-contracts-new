@@ -28,4 +28,6 @@ interface IMonMinter is IERC721, UsesMon {
   ) external;
 
   function monRecords(uint256 id) external returns (Mon memory);
+
+  function setTokenURI(uint256 id, string calldata uri) external;
 }
