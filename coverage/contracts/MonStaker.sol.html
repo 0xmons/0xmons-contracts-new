@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/MonStaker.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> MonStaker.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">96.36% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>53/55</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">86.36% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>19/22</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>22/22</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">96.61% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>57/59</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">61×</span>
+<span class="cline-any cline-yes">39×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">43×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">43×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">43×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">41×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">41×</span>
+<span class="cline-any cline-yes">35×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">41×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">119×</span>
+<span class="cline-any cline-yes">77×</span>
+<span class="cline-any cline-yes">77×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">77×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">38×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">38×</span>
+<span class="cline-any cline-yes">34×</span>
+<span class="cline-any cline-yes">34×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">31×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">31×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: AGPL-3.0-or-later
+&nbsp;
+pragma solidity ^0.6.8;
+pragma experimental ABIEncoderV2;
+&nbsp;
+import "./IMonMinter.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+&nbsp;
+// reseterRole which can modify the summonDelay and doom balances
+&nbsp;
+contract MonStaker is AccessControl {
+&nbsp;
+  modifier onlyAdmin {
+    require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Not admin");
+    _;
+  }
+&nbsp;
+  modifier onlyStakerAdmin {
+    require(hasRole(STAKER_ADMIN_ROLE, msg.sender), "Not staker admin");
+    _;
+  }
+&nbsp;
+  using SafeMath for uint256;
+  using SafeERC20 for IERC20;
+&nbsp;
+  bytes32 public constant STAKER_ADMIN_ROLE = keccak256("STAKER_ADMIN_ROLE");
+&nbsp;
+  IERC20 public xmon;
+  IMonMinter public monMinter;
+&nbsp;
+  uint256 public maxMons;
+  uint256 public numMons;
+&nbsp;
+  uint256 public maxStake;
+&nbsp;
+  struct Stake {
+    uint256 amount;
+    uint256 startBlock;
+  }
+  mapping(address =&gt; Stake) public stakeRecords;
+&nbsp;
+  // amount of doom needed to summon monster
+  uint256 public doomFee;
+&nbsp;
+  // fee in XMON to pay to reset delay
+  uint256 public resetFee;
+&nbsp;
+  // starting delay
+  uint256 public startDelay;
+&nbsp;
+  // initial rarity
+  uint256 public rarity;
+&nbsp;
+  // the amount of doom accrued by each account
+  mapping(address =&gt; uint256) public doomBalances;
+&nbsp;
+  // the additional delay between mintings for each account
+  mapping(address =&gt; uint256) public summonDelay;
+&nbsp;
+  // the block at which each account can summon
+  mapping(address =&gt; uint256) public nextSummonTime;
+&nbsp;
+  constructor() public {
+&nbsp;
+    // Give caller admin permissions
+    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+&nbsp;
+    // Make the caller admin a staker admin
+    grantRole(STAKER_ADMIN_ROLE, msg.sender);
+&nbsp;
+    // starting fee is 1 XMON to reset
+    resetFee = 1 * (10**18);
+&nbsp;
+    // starting max stake of 5 XMON
+    maxStake = 5 * (10**18);
+&nbsp;
+    // starting delay is 3000 blocks, ~12 hours
+    startDelay = 3000;
+&nbsp;
+    // starting maxMons is 256
+    maxMons = 256;
+&nbsp;
+    // starting rarity is 1
+    rarity = 1;
+  }
+&nbsp;
+  function addStake(uint256 amount) public {
+&nbsp;
+    // award existing doom
+    awardDoom(msg.sender);
+&nbsp;
+    // update to total amount
+    uint256 newAmount = stakeRecords[msg.sender].amount.add(amount);
+&nbsp;
+    // ensure the total is less than max stake
+    require(newAmount &lt;= maxStake, "Exceeds max stake");
+&nbsp;
+    // update stake records
+    stakeRecords[msg.sender] = Stake(
+      newAmount,
+      block.number
+    );
+&nbsp;
+    // initialize the summonDelay if it's 0
+    if (summonDelay[msg.sender] == 0) {
+      summonDelay[msg.sender] = startDelay;
+    }
+&nbsp;
+    // transfer tokens to contract
+    xmon.safeTransferFrom(msg.sender, address(this), amount);
+  }
+&nbsp;
+  function removeStake() public {
+    // award doom
+    awardDoom(msg.sender);
+&nbsp;
+    // calculate how much XMON to transfer back
+    uint256 amountToTransfer = stakeRecords[msg.sender].amount;
+&nbsp;
+    // remove stake records
+    delete stakeRecords[msg.sender];
+&nbsp;
+    // transfer tokens back
+    xmon.safeTransfer(msg.sender, amountToTransfer);
+  }
+&nbsp;
+  function emergencyRemoveStake() public {
+    // calculate how much to award
+    uint256 amountToTransfer = stakeRecords[msg.sender].amount;
+&nbsp;
+    // remove stake records
+    delete stakeRecords[msg.sender];
+&nbsp;
+    // transfer tokens back
+    xmon.safeTransfer(msg.sender, amountToTransfer);
+  }
+&nbsp;
+  // Awards accumulated doom and resets startBlock
+  function awardDoom(address a) public {
+    // If there is an existing amount staked, add the current accumulated amount and reset the block number
+    if (stakeRecords[a].amount != 0) {
+      uint256 doomAmount = stakeRecords[a].amount.mul(block.number.sub(stakeRecords[a].startBlock));
+      doomBalances[a] = doomBalances[a].add(doomAmount);
+&nbsp;
+      // reset the start block
+      stakeRecords[a].startBlock = block.number;
+    }
+  }
+&nbsp;
+  // Claim a monster
+  function claimMon() public returns (uint256) {
+&nbsp;
+    // award doom first
+    awardDoom(msg.sender);
+&nbsp;
+    // check conditions
+    require(doomBalances[msg.sender] &gt;= doomFee, "Not enough DOOM");
+    <span class="missing-if-branch" title="else path not taken" >E</span>require(block.number &gt;= nextSummonTime[msg.sender], "Time isn't up yet");
+    <span class="missing-if-branch" title="else path not taken" >E</span>require(numMons &lt; maxMons, "All mons are out");
+&nbsp;
+    // remove doom fee from caller's doom balance
+    doomBalances[msg.sender] = doomBalances[msg.sender].sub(doomFee);
+&nbsp;
+    // update the next block where summon can happen
+    nextSummonTime[msg.sender] = summonDelay[msg.sender] + block.number;
+&nbsp;
+    // double the delay time
+    summonDelay[msg.sender] = summonDelay[msg.sender].mul(2);
+&nbsp;
+    // Update num mons count
+    numMons = numMons.add(1);
+&nbsp;
+    // mint the monster
+    uint256 id = monMinter.mintMonster(
+      msg.sender,
+      0,
+      0,
+      1,
+      uint256(blockhash(block.number.sub(1))),
+      0,
+      rarity
+    );
+&nbsp;
+    // return new monster id
+    return(id);
+  }
+&nbsp;
+  function resetDelay() public {
+    // set delay to the starting value
+    summonDelay[msg.sender] = startDelay;
+&nbsp;
+    // move tokens to the XMON contract as fee
+    xmon.safeTransferFrom(msg.sender, address(xmon), resetFee);
+  }
+&nbsp;
+  function moveTokens(address tokenAddress, address to, uint256 numTokens) public onlyAdmin {
+    <span class="missing-if-branch" title="if path not taken" >I</span>require(tokenAddress != address(xmon), "Can't move XMON");
+<span class="cstat-no" title="statement not covered" >    IERC20 _token = IERC20(tokenAddress);</span>
+<span class="cstat-no" title="statement not covered" >    _token.safeTransfer(to, numTokens)</span>;
+  }
+&nbsp;
+  function setXMON(address tokenAddress) public onlyAdmin {
+    require(address(xmon) == address(0), "already set");
+    xmon = IERC20(tokenAddress);
+  }
+&nbsp;
+  function setMonMinter(address a) public onlyAdmin {
+    require(address(monMinter) == address(0), "already set");
+    monMinter = IMonMinter(a);
+  }
+&nbsp;
+  function setRarity(uint256 r) public onlyAdmin {
+    rarity = r;
+  }
+&nbsp;
+  function setMaxMons(uint256 m) public onlyAdmin {
+    maxMons = m;
+  }
+&nbsp;
+  function setMaxStake(uint256 m) public onlyAdmin {
+    maxStake = m;
+  }
+&nbsp;
+  function setStartDelay(uint256 s) public onlyAdmin {
+    startDelay = s;
+  }
+&nbsp;
+  function setResetFee(uint256 f) public onlyAdmin {
+    resetFee = f;
+  }
+&nbsp;
+  function setDoomFee(uint256 f) public onlyAdmin {
+    doomFee = f;
+  }
+&nbsp;
+  // Allows admin to add new staker admins
+  function setStakerAdminRole(address a) public onlyAdmin {
+    grantRole(STAKER_ADMIN_ROLE, a);
+  }
+&nbsp;
+  function setDoomBalances(address a, uint256 d) public onlyStakerAdmin {
+    doomBalances[a] = d;
+  }
+&nbsp;
+  function setSummonDelay(address a, uint256 d) public onlyStakerAdmin {
+    summonDelay[a] = d;
+  }
+&nbsp;
+  function pendingDoom(address a) public view returns(uint256) {
+    uint256 doomAmount = stakeRecords[a].amount.mul(block.number.sub(stakeRecords[a].startBlock));
+    return(doomAmount);
+  }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Nov 28 2020 13:22:23 GMT-0800 (Pacific Standard Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>
