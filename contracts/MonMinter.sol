@@ -41,13 +41,34 @@ contract MonMinter is ERC721Burnable, AccessControl, UsesMon {
     grantRole(MINTER_ROLE, msg.sender);
 
     // Send monster #0 to the caller
-    mintMonster(msg.sender, 0, 0, 0,  0, 0, 0);
+    mintMonster(
+      // to
+      msg.sender,
+      // parent1Id
+      0,
+      // parent2Id
+      0,
+      // minterContract
+      address(this),
+      // contractOrder
+      0,
+      // gen
+      0,
+      // bits
+      0,
+      // exp
+      0,
+      // rarity
+      0
+      );
   }
 
   // Mints a monster to an address and sets its data
   function mintMonster(address to,
-                       uint256 parent1,
-                       uint256 parent2,
+                       uint256 parent1Id,
+                       uint256 parent2Id,
+                       address minterContract,
+                       uint256 contractOrder,
                        uint256 gen,
                        uint256 bits,
                        uint256 exp,
@@ -57,8 +78,10 @@ contract MonMinter is ERC721Burnable, AccessControl, UsesMon {
     monIds.increment();
     monRecords[currId] = Mon(
       to,
-      parent1,
-      parent2,
+      parent1Id,
+      parent2Id,
+      minterContract,
+      contractOrder,
       gen,
       bits,
       exp,
@@ -71,8 +94,10 @@ contract MonMinter is ERC721Burnable, AccessControl, UsesMon {
   // Modifies the data of a monster
   function modifyMon(uint256 id,
                      bool ignoreZeros,
-                     uint256 parent1,
-                     uint256 parent2,
+                     uint256 parent1Id,
+                     uint256 parent2Id,
+                     address minterContract,
+                     uint256 contractOrder,
                      uint256 gen,
                      uint256 bits,
                      uint256 exp,
@@ -80,11 +105,17 @@ contract MonMinter is ERC721Burnable, AccessControl, UsesMon {
   ) public onlyMinter {
     Mon storage currMon = monRecords[id];
     if (ignoreZeros) {
-      if (parent1 != 0) {
-        currMon.parent1 = parent1;
+      if (parent1Id != 0) {
+        currMon.parent1Id = parent1Id;
       }
-      if (parent2 != 0) {
-        currMon.parent2 = parent2;
+      if (parent2Id != 0) {
+        currMon.parent2Id = parent2Id;
+      }
+      if (minterContract != address(0)) {
+        currMon.minterContract = minterContract;
+      }
+      if (contractOrder != 0) {
+        currMon.contractOrder = contractOrder;
       }
       if (gen != 0) {
         currMon.gen = gen;
@@ -100,8 +131,10 @@ contract MonMinter is ERC721Burnable, AccessControl, UsesMon {
       }
     }
     else {
-      currMon.parent1 = parent1;
-      currMon.parent2 = parent2;
+      currMon.parent1Id = parent1Id;
+      currMon.parent2Id = parent2Id;
+      currMon.minterContract = minterContract;
+      currMon.contractOrder = contractOrder;
       currMon.gen = gen;
       currMon.bits = bits;
       currMon.exp = exp;

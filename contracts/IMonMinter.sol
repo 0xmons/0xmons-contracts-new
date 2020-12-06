@@ -9,8 +9,10 @@ import "./UsesMon.sol";
 interface IMonMinter is IERC721, UsesMon {
 
   function mintMonster(address to,
-                       uint256 parent1,
-                       uint256 parent2,
+                       uint256 parent1Id,
+                       uint256 parent2Id,
+                       address minterContract,
+                       uint256 contractOrder,
                        uint256 gen,
                        uint256 bits,
                        uint256 exp,
@@ -19,8 +21,10 @@ interface IMonMinter is IERC721, UsesMon {
 
   function modifyMon(uint256 id,
                      bool ignoreZeros,
-                     uint256 parent1,
-                     uint256 parent2,
+                     uint256 parent1Id,
+                     uint256 parent2Id,
+                     address minterContract,
+                     uint256 contractOrder,
                      uint256 gen,
                      uint256 bits,
                      uint256 exp,
