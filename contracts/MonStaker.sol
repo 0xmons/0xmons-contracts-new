@@ -233,6 +233,7 @@ contract MonStaker is MonCreatorInstance {
   }
 
   function setMaxDelay(uint256 d) public onlyAdmin {
+    require(maxDelay >= startDelay, "maxDelay too low");
     maxDelay = d;
   }
 
@@ -254,7 +255,10 @@ contract MonStaker is MonCreatorInstance {
   function setSummonDelay(address a, uint256 d) public onlyStakerAdmin {
     summonDelay[a] = d;
   }
-  
+
+  function setNextSummonTime(address a, uint256 t) public onlyStakerAdmin {
+    nextSummonTime[a] = t;
+  }
 
   function pendingDoom(address a) public view returns(uint256) {
     uint256 doomAmount = stakeRecords[a].amount.mul(block.number.sub(stakeRecords[a].startBlock));

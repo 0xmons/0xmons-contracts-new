@@ -14,6 +14,7 @@ contract("monStaker tests", async accounts => {
     // Ensure only the owner can set rarity
     // Ensure only the owner can set maxStake
     // Ensure only the owner can set startDelay
+    // Ensure only the owner can set maxDelay
     // Ensure only the owner can set resetFee
     // Ensure only the owner can set doomFee
     // Ensure only the owner can set maxMons
@@ -31,6 +32,13 @@ contract("monStaker tests", async accounts => {
     expect(result).to.eql(web3.utils.toBN(1));
     await truffleAssert.reverts(
       monStaker.setMaxStake(1, {from: accounts[1]})
+    );
+
+    await monStaker.setMaxDelay(20, {from: accounts[0]});
+    result = await monStaker.maxDelay();
+    expect(result).to.eql(web3.utils.toBN(20));
+    await truffleAssert.reverts(
+      monStaker.setMaxDelay(1, {from: accounts[1]})
     );
 
     await monStaker.setStartDelay(2, {from: accounts[0]});
@@ -86,8 +94,10 @@ contract("monStaker tests", async accounts => {
 
     // Ensure C can modify doomBalance
     // Ensure C can modify summonDelay
+    // Ensure C can modify nextSummonTime
     // Ensure that B can't modify doomBalance
     // Ensure that B can't modify doomBalance
+    // Ensure that B can't modify nextSummonTime
     await monStaker.setDoomBalances(accounts[0], 1, {from: accounts[2]});
     result = await monStaker.doomBalances(accounts[0]);
     expect(result).to.eql(web3.utils.toBN(1));
@@ -96,11 +106,18 @@ contract("monStaker tests", async accounts => {
     result = await monStaker.summonDelay(accounts[0]);
     expect(result).to.eql(web3.utils.toBN(2));
 
+    await monStaker.setNextSummonTime(accounts[0], 3, {from: accounts[2]});
+    result = await monStaker.nextSummonTime(accounts[0]);
+    expect(result).to.eql(web3.utils.toBN(3));
+
     await truffleAssert.reverts(
       monStaker.setDoomBalances(accounts[0], 1, {from: accounts[1]})
     );
     await truffleAssert.reverts(
       monStaker.setSummonDelay(accounts[0], 1, {from: accounts[1]})
+    );
+    await truffleAssert.reverts(
+      monStaker.setNextSummonTime(accounts[0], 1, {from: accounts[1]})
     );
   });
 });
@@ -189,7 +206,6 @@ contract("monStaker tests", async accounts => {
 contract("monStaker tests", async accounts => {
   it ("handles doom calculations correctly", async() => {
     let xmon = await xmonArtifact.deployed();
-    let monMinter = await monMinterArtifact.deployed();
     let monStaker = await monStakerArtifact.deployed();
     let result = undefined;
 
@@ -426,15 +442,24 @@ contract("monStaker tests", async accounts => {
     await monStaker.removeStake({from: accounts[0]});
     await monStaker.resetDelay({from: accounts[0]});
     result = await xmon.balanceOf(accounts[0]);
-    expected = web3.utils.toBN('9999000000000000000000');
-    expect(result).to.eql(expected);
+    expect(result).to.eql(web3.utils.toBN('9999000000000000000000'));
 
     result = await monStaker.summonDelay(accounts[0]);
     expect(result).to.eql(startDelay);
 
     result = await xmon.balanceOf(xmon.address);
-    expected = web3.utils.toBN('1000000000000000000');
-    expect(result).to.eql(expected);
+    expect(result).to.eql(web3.utils.toBN('1000000000000000000'));
+
+    // Expect claimMon to set to maxDelay if summonDelay is too high
+    await monStaker.setStartDelay(1, {from: accounts[0]});
+    await monStaker.setStakerAdminRole(accounts[0], {from: accounts[0]});
+    await monStaker.setSummonDelay(accounts[0], 1000, {from: accounts[0]});
+    await monStaker.setNextSummonTime(accounts[0], 0, {from: accounts[0]});
+    await monStaker.setMaxDelay(10, {from: accounts[0]});
+    await monStaker.setDoomBalances(accounts[0], 100000, {from: accounts[0]});
+    await monStaker.claimMon({from: accounts[0]});
+    result = await monStaker.summonDelay(accounts[0]);
+    expect(result).to.eql(web3.utils.toBN('10'))
   });
 });
 

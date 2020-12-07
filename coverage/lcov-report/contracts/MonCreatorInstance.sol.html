@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Code coverage report for contracts/UsesMon.sol</title>
+    <title>Code coverage report for contracts/MonCreatorInstance.sol</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../prettify.css" />
     <link rel="stylesheet" href="../base.css" />
@@ -16,28 +16,28 @@
 <div class='wrapper'>
   <div class='pad1'>
     <h1>
-      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> UsesMon.sol
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> MonCreatorInstance.sol
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>0/0</span>
+        <span class='fraction'>5/5</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>0/0</span>
+        <span class='fraction'>4/4</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>0/0</span>
+        <span class='fraction'>4/4</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>0/0</span>
+        <span class='fraction'>6/6</span>
       </div>
     </div>
   </div>
@@ -76,7 +76,13 @@
 31
 32
 33
-34</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+34
+35
+36
+37
+38
+39
+40</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -99,48 +105,60 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">73×</span>
+<span class="cline-any cline-yes">41×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">41×</span>
+<span class="cline-any cline-yes">40×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: AGPL-3.0-or-later
 &nbsp;
 pragma solidity ^0.6.8;
 &nbsp;
-interface UsesMon {
-  struct Mon {
-      // the original address this monster went to
-      address summoner;
+import "./IMonMinter.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 &nbsp;
-      // the unique ID associated with parent 1 of this monster
-      uint256 parent1Id;
+abstract contract MonCreatorInstance is AccessControl {
 &nbsp;
-      // the unique ID associated with parent 2 of this monster
-      uint256 parent2Id;
+  using SafeERC20 for IERC20;
+  using SafeMath for uint256;
 &nbsp;
-      // the address of the contract that minted this monster
-      address minterContract;
+  IERC20 public xmon;
+  IMonMinter public monMinter;
 &nbsp;
-      // the id of this monster within its specific contract
-      uint256 contractOrder;
+  uint256 public maxMons;
+  uint256 public numMons;
 &nbsp;
-      // the generation of this monster
-      uint256 gen;
+  // to be appended before the URI for the NFT
+  string public prefixURI;
 &nbsp;
-      // used to calculate statistics and other things
-      uint256 bits;
+  modifier onlyAdmin {
+    require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Not admin");
+    _;
+  }
 &nbsp;
-      // tracks the experience of this monster
-      uint256 exp;
+  function updateNumMons() public {
+    require(numMons &lt; maxMons, "All mons are out");
+    numMons = numMons.add(1);
+  }
 &nbsp;
-      // the monster's rarity
-      uint256 rarity;
+  function setMaxMons(uint256 m) public onlyAdmin {
+    maxMons = m;
+  }
+&nbsp;
+  function setPrefixURI(string memory prefix) public onlyAdmin {
+    prefixURI = prefix;
   }
 }</pre></td></tr>
 </table></pre>
