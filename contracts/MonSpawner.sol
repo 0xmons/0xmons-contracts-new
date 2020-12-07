@@ -3,37 +3,23 @@
 pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
+import "./MonCreatorInstance.sol";
 import "./UsesMon.sol";
-import "./IMonMinter.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract MonSpawner is AccessControl, UsesMon {
+contract MonSpawner is MonCreatorInstance, UsesMon {
 
   using SafeMath for uint256;
   using Strings for uint256;
-
-  modifier onlyAdmin {
-    require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Not admin");
-    _;
-  }
+  using SafeMath for uint8;
+  using SafeERC20 for IERC20;
 
   modifier onlySpawnerAdmin {
     require(hasRole(SPAWNER_ADMIN_ROLE, msg.sender), "Not spawner admin");
     _;
   }
 
-  using SafeMath for uint256;
-  using SafeMath for uint8;
-
-  using SafeERC20 for IERC20;
-
   bytes32 public constant SPAWNER_ADMIN_ROLE = keccak256("SPAWNER_ADMIN_ROLE");
-
-  IERC20 public xmon;
-  IMonMinter public monMinter;
 
   // cost in XMON to spawn a monster
   uint256 public spawnFee;
@@ -50,27 +36,38 @@ contract MonSpawner is AccessControl, UsesMon {
   // block where a monster becomes usable for spawning again
   mapping(uint256 => uint256) public monUnlock;
 
-  // to be appended before the URI for the NFT
-  string public prefixURI;
+  constructor(address xmonAddress, address monMinterAddress) public {
 
-  constructor() public {
     // Give caller admin permissions
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+
+    // set xmon instance
+    xmon = IERC20(xmonAddress);
+
+    // set monMinter instance
+    monMinter = IMonMinter(monMinterAddress);
+
+    // spawnFee is 0.1 XMON to start
+    spawnFee = 0.1 * (10**18);
   }
 
   function spawnNewMon(uint256 mon1Id, uint256 mon2Id) public returns (uint256) {
     require(monMinter.ownerOf(mon1Id) == msg.sender, "Need to own mon1");
     require(monMinter.ownerOf(mon2Id) == msg.sender, "Need to own mon2");
-    require(!hasSpawned[mon1Id][mon2Id] && !hasSpawned[mon2Id][mon1Id], "Already spawned with mon1 mon2");
+    require(!hasSpawned[mon1Id][mon2Id], "Already spawned with mon1 mon2");
     require(block.number >= monUnlock[mon1Id], "mon1 isn't unlocked yet");
     require(block.number >= monUnlock[mon2Id], "mon2 isn't unlocked yet");
+    require(mon1Id != mon2Id, "Can't spawn monster with itself");
+    super.updateNumMons();
 
-    // set spawn to be true
+    // set spawn to be true for both (A,B) (B,A) pairings
     hasSpawned[mon1Id][mon2Id] = true;
+    hasSpawned[mon2Id][mon1Id] = true;
 
     // transfer fee to token address
     xmon.transferFrom(msg.sender, address(xmon), spawnFee);
 
+    // get references for both monsters
     Mon memory mon1 = monMinter.monRecords(mon1Id);
     Mon memory mon2 = monMinter.monRecords(mon2Id);
 
@@ -86,18 +83,28 @@ contract MonSpawner is AccessControl, UsesMon {
 
     // mint the new monster
     uint256 id = monMinter.mintMonster(
+      // to
       msg.sender,
+      // parent1Id
       mon1Id,
+      // parent2Id
       mon2Id,
+      // minterContract
+      address(this),
+      // contractOrder
+      numMons,
+      // generation
       gen,
+      // bits
       uint256(blockhash(block.number.sub(1))),
+      // exp
       0,
       // assign random rarity from 1 to 64
       uint8(uint256(blockhash(block.number.sub(1)))).div(4).add(1)
     );
 
     // update the URI of the new mon to be the prefix plus the id
-    string memory uri = string(abi.encodePacked(prefixURI, id.toString()));
+    string memory uri = string(abi.encodePacked(prefixURI, numMons.toString()));
     monMinter.setTokenURI(id, uri);
 
     return(id);
@@ -115,22 +122,8 @@ contract MonSpawner is AccessControl, UsesMon {
     extraDelay = d;
   }
 
-  function setPrefixURI(string memory prefix) public onlyAdmin {
-    prefixURI = prefix;
-  }
-
   function setSpawnFee(uint256 f) public onlyAdmin {
     spawnFee = f;
-  }
-
-  function setXMON(address tokenAddress) public onlyAdmin {
-    require(address(xmon) == address(0), "already set");
-    xmon = IERC20(tokenAddress);
-  }
-
-  function setMonMinter(address a) public onlyAdmin {
-    require(address(monMinter) == address(0), "already set");
-    monMinter = IMonMinter(a);
   }
 
   function setSpawnerAdminRole(address a) public onlyAdmin {

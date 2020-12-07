@@ -8,7 +8,6 @@ contract("monSpawner tests", async accounts => {
   it ("handles setters and permissions correctly", async() => {
     let monSpawner = await monSpawnerArtifact.deployed();
     let xmon = await xmonArtifact.deployed();
-    let monMinter = await monMinterArtifact.deployed();
 
     // Ensure only admin can change the initialDelay
     // Ensure only admin can change the extraDelay
@@ -29,9 +28,9 @@ contract("monSpawner tests", async accounts => {
       monSpawner.setExtraDelay(1, {from: accounts[1]})
     )
 
-    await monSpawner.setPrefixURI('test', {from: accounts[0]});
+    await monSpawner.setPrefixURI('test/', {from: accounts[0]});
     expected = await monSpawner.prefixURI();
-    expect(expected).to.eql('test');
+    expect(expected).to.eql('test/');
     await truffleAssert.reverts(
       monSpawner.setPrefixURI('test2', {from: accounts[1]})
     )
@@ -41,26 +40,6 @@ contract("monSpawner tests", async accounts => {
     expect(expected).to.eql(web3.utils.toBN('10'));
     await truffleAssert.reverts(
       monSpawner.setSpawnFee(10, {from: accounts[1]})
-    );
-
-    // Ensure only admin can set xmon
-    // Ensure xmon can only be set once
-    await truffleAssert.reverts(
-      monSpawner.setXMON(xmon.address, {from: accounts[1]})
-    );
-    await monSpawner.setXMON(xmon.address, {from: accounts[0]});
-    await truffleAssert.reverts(
-      monSpawner.setXMON(xmon.address, {from: accounts[0]})
-    );
-
-    // Ensure only admin can set monMinter
-    // Ensure monMinter can only be set once
-    await truffleAssert.reverts(
-      monSpawner.setMonMinter(monMinter.address, {from: accounts[1]})
-    );
-    await monSpawner.setMonMinter(monMinter.address, {from: accounts[0]});
-    await truffleAssert.reverts(
-      monSpawner.setMonMinter(monMinter.address, {from: accounts[0]})
     );
 
     // Whitelist A
@@ -109,23 +88,17 @@ contract("monSpawner tests", async accounts => {
     // set prefixURI
     await monSpawner.setPrefixURI("spawn/", {from: accounts[0]});
 
-    // init xmon and monMinter contract references
-    await monStaker.setXMON(xmon.address, {from: accounts[0]});
-    await monStaker.setMonMinter(monMinter.address, {from: accounts[0]});
-    await monSpawner.setXMON(xmon.address, {from: accounts[0]});
-    await monSpawner.setMonMinter(monMinter.address, {from: accounts[0]});
-
     // set initalDelay
     await monSpawner.setInitialDelay(100, {from: accounts[0]});
     
     // set extraDelay
-    await monSpawner.setExtraDelay(1000, {from: accounts[0]});
+    await monSpawner.setExtraDelay(10000, {from: accounts[0]});
 
     // approve contracts for A
     await xmon.approve(monStaker.address, web3.utils.toBN('9999000000000000000000'), {from: accounts[0]}); 
     await xmon.approve(monSpawner.address, web3.utils.toBN('999999999999999999999999'), {from: accounts[0]});
 
-    // set monStaker to be minter
+    // set monStaker and monSpawner to be minter
     await monMinter.setMinterRole(monStaker.address, {from: accounts[0]});
     await monMinter.setMinterRole(monSpawner.address, {from: accounts[0]});
 
@@ -141,25 +114,42 @@ contract("monSpawner tests", async accounts => {
     await monStaker.claimMon({from: accounts[0]});
     await monStaker.claimMon({from: accounts[0]});
 
-    // Breed a new monster (#4)
+    // Expect failure when maxMons = 0
+    truffleAssert.reverts(
+      monSpawner.spawnNewMon(1,2),
+      "All mons are out"
+    );
+
+    await monSpawner.setMaxMons(100, {from: accounts[0]});
+
+    // Breed a new monster (id = 4, contractOrder = 1)
     await monSpawner.spawnNewMon(1,2);
 
     // Ensure parents and gen are correct (1 and 2 to make 4)
     let spawnedMon = await monMinter.monRecords(4);
-    expect(spawnedMon["parent1"]).to.eql(web3.utils.toBN('1'));
-    expect(spawnedMon["parent2"]).to.eql(web3.utils.toBN('2'));
+    expect(spawnedMon["parent1Id"]).to.eql(web3.utils.toBN('1'));
+    expect(spawnedMon["parent2Id"]).to.eql(web3.utils.toBN('2'));
+    expect(spawnedMon["minterContract"].toString()).to.eql(monSpawner.address.toString());
+    expect(spawnedMon["contractOrder"]).to.eql(web3.utils.toBN('1'));
     expect(spawnedMon["gen"]).to.eql(web3.utils.toBN('2'));
     
-    // Ensure the full URI is being set correctly
+    // Ensure the full URI is being set correctly (should be 1 becuase this is the first monSpawner mon)
     result = await monMinter.tokenURI(4);
-    expect(result).to.eql("api.com/spawn/4");
+    expect(result).to.eql("api.com/spawn/1");
 
-    // check the monUnlock is at least startDelay for 1 and 2
-    // but less than extraDelay
+    // check the monUnlock is at least startDelay but less than extraDelay for 1 and 2
+    // and that they are equal
     result = await monSpawner.monUnlock(1);
     let cond1 = result.gt(web3.utils.toBN('100'));
-    let cond2 = result.lt(web3.utils.toBN('1000'));
+    let cond2 = result.lt(web3.utils.toBN('10000'));
     expect(cond1 && cond2).to.eql(true);
+
+    let result2 = await monSpawner.monUnlock(2);
+    cond1 = result2.gt(web3.utils.toBN('100'));
+    cond2 = result2.lt(web3.utils.toBN('10000'));
+    expect(cond1 && cond2).to.eql(true);
+
+    expect(result).to.eql(result2);
 
     // ensure spawning fails if the owner doesn't own the monsters
     await truffleAssert.reverts(
@@ -203,22 +193,30 @@ contract("monSpawner tests", async accounts => {
     result = await monSpawner.monUnlock(1);
     expect(result).to.eql(web3.utils.toBN('10'));
 
+    // ensure spawning fails if they are both the same monster
+    await truffleAssert.reverts(
+      monSpawner.spawnNewMon(1,1, {from: accounts[0]}),
+      "Can't spawn monster with itself"
+    );
+
     // check that the monUnlock has extraDelay scale with gen 
     await monSpawner.spawnNewMon(1, 4), {from: accounts[0]};
     spawnedMon = await monMinter.monRecords(5);
-    expect(spawnedMon["parent1"]).to.eql(web3.utils.toBN('1'));
-    expect(spawnedMon["parent2"]).to.eql(web3.utils.toBN('4'));
+    expect(spawnedMon["parent1Id"]).to.eql(web3.utils.toBN('1'));
+    expect(spawnedMon["parent2Id"]).to.eql(web3.utils.toBN('4'));
+    expect(spawnedMon["minterContract"].toString()).to.eql(monSpawner.address.toString());
+    expect(spawnedMon["contractOrder"]).to.eql(web3.utils.toBN('2'));
     expect(spawnedMon["gen"]).to.eql(web3.utils.toBN('2'));
 
     // Ensure the full URI is being set correctly
     result = await monMinter.tokenURI(5);
-    expect(result).to.eql("api.com/spawn/5");
+    expect(result).to.eql("api.com/spawn/2");
 
     // check the monUnlock is at least startDelay + extraDelay
     // but less 2*extraDelay + startDelay
     result = await monSpawner.monUnlock(4);
-    cond1 = result.gt(web3.utils.toBN('1100'));
-    cond2 = result.lt(web3.utils.toBN('2000'));
+    cond1 = result.gt(web3.utils.toBN('10100'));
+    cond2 = result.lt(web3.utils.toBN('20000'));
     expect(cond1 && cond2).to.eql(true);
 
     // Ensure that gen is set to be the lower of the two mons (2)
@@ -226,8 +224,10 @@ contract("monSpawner tests", async accounts => {
     await monSpawner.setMonUnlock(1, 10, {from:accounts[1]});
     await monSpawner.spawnNewMon(5, 1, {from: accounts[0]});
     spawnedMon = await monMinter.monRecords(6);
-    expect(spawnedMon["parent1"]).to.eql(web3.utils.toBN('5'));
-    expect(spawnedMon["parent2"]).to.eql(web3.utils.toBN('1'));
+    expect(spawnedMon["parent1Id"]).to.eql(web3.utils.toBN('5'));
+    expect(spawnedMon["parent2Id"]).to.eql(web3.utils.toBN('1'));
+    expect(spawnedMon["minterContract"].toString()).to.eql(monSpawner.address.toString());
+    expect(spawnedMon["contractOrder"]).to.eql(web3.utils.toBN('3'));
     expect(spawnedMon["gen"]).to.eql(web3.utils.toBN('2'));
 
     // Ensure that gen is set to be the lower of the two mons (3)
@@ -235,8 +235,10 @@ contract("monSpawner tests", async accounts => {
     await monSpawner.setMonUnlock(5, 10, {from:accounts[1]});
     await monSpawner.spawnNewMon(5, 6, {from: accounts[0]});
     spawnedMon = await monMinter.monRecords(7);
-    expect(spawnedMon["parent1"]).to.eql(web3.utils.toBN('5'));
-    expect(spawnedMon["parent2"]).to.eql(web3.utils.toBN('6'));
+    expect(spawnedMon["parent1Id"]).to.eql(web3.utils.toBN('5'));
+    expect(spawnedMon["parent2Id"]).to.eql(web3.utils.toBN('6'));
+    expect(spawnedMon["minterContract"].toString()).to.eql(monSpawner.address.toString());
+    expect(spawnedMon["contractOrder"]).to.eql(web3.utils.toBN('4'));
     expect(spawnedMon["gen"]).to.eql(web3.utils.toBN('3'));
   });
 });

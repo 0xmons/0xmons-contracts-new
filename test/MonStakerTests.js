@@ -17,6 +17,7 @@ contract("monStaker tests", async accounts => {
     // Ensure only the owner can set resetFee
     // Ensure only the owner can set doomFee
     // Ensure only the owner can set maxMons
+    // Ensure only the owner can set prefixURI
 
     await monStaker.setRarity(10, {from: accounts[0]});
     result = await monStaker.rarity();
@@ -56,13 +57,15 @@ contract("monStaker tests", async accounts => {
     await monStaker.setMaxMons(5, {from: accounts[0]});
     result = await monStaker.maxMons();
     expect(result).to.eql(web3.utils.toBN(5));
-
-    // Ensure that other accounts can't call setXMON and setMonMinter
     await truffleAssert.reverts(
-      monStaker.setXMON(xmon.address, {from: accounts[1]})
+      monStaker.setMaxMons(5, {from: accounts[1]})
     );
+
+    await monStaker.setPrefixURI("test", {from: accounts[0]});
+    result = await monStaker.prefixURI();
+    expect(result).to.eql("test");
     await truffleAssert.reverts(
-      monStaker.setMonMinter(xmon.address, {from: accounts[1]})
+      monStaker.setPrefixURI("test2", {from: accounts[1]})
     );
 
     // Ensure that moveTokens fails when another account calls it
@@ -70,7 +73,6 @@ contract("monStaker tests", async accounts => {
     await truffleAssert.reverts(
       monStaker.moveTokens(xmon.address, accounts[0], 0, {from: accounts[1]})
     );
-    await monStaker.setXMON(xmon.address, {from: accounts[0]});
     await truffleAssert.reverts(
       monStaker.moveTokens(xmon.address, accounts[0], 0, {from: accounts[0]})
     );
@@ -114,30 +116,10 @@ contract("monStaker tests", async accounts => {
     Whitelist the staker contract
     Add a 1% fee
     Set the maxStake to be 100 tokens
-    Set xmon address
-    Ensure that admin can't set xmon again
-    Ensure that others can't set xmon again
-    Set monMinter address
-    Ensure that admin can't set monMinter again
-    Ensure that others can't set monMinter again
     */
     await xmon.setWhitelist(monStaker.address, true, {from: accounts[0]});
     await xmon.setTransferFee(1, {from: accounts[0]});
     await monStaker.setMaxStake(10, {from: accounts[0]});
-    await monStaker.setXMON(xmon.address, {from: accounts[0]});
-    await truffleAssert.reverts(
-      monStaker.setXMON(xmon.address, {from: accounts[0]})
-    );
-    await truffleAssert.reverts(
-      monStaker.setXMON(xmon.address, {from: accounts[1]})
-    );
-    await monStaker.setMonMinter(monMinter.address, {from: accounts[0]});
-    await truffleAssert.reverts(
-      monStaker.setMonMinter(xmon.address, {from: accounts[0]})
-    );
-    await truffleAssert.reverts(
-      monStaker.setMonMinter(xmon.address, {from: accounts[1]})
-    );
 
     /*
     - A deposits 100 XMON tokens into the staker
@@ -216,10 +198,6 @@ contract("monStaker tests", async accounts => {
 
     // init tx fee
     await xmon.setTransferFee(1, {from: accounts[0]});
-
-    // init xmon and monMinter
-    await monStaker.setXMON(xmon.address, {from: accounts[0]});
-    await monStaker.setMonMinter(monMinter.address, {from: accounts[0]});
 
     // approve stakers
     await xmon.approve(monStaker.address, 10000000000, {from: accounts[0]}); 
@@ -345,27 +323,29 @@ contract("monStaker tests", async accounts => {
     // init tx fee
     await xmon.setTransferFee(1, {from: accounts[0]});
 
-    // init xmon and monMinter contract references
-    await monStaker.setXMON(xmon.address, {from: accounts[0]});
-    await monStaker.setMonMinter(monMinter.address, {from: accounts[0]});
-
     // approve stakers for A and B
     await xmon.approve(monStaker.address, web3.utils.toBN('9999000000000000000000'), {from: accounts[0]}); 
     await xmon.approve(monStaker.address, 10000000000, {from: accounts[1]}); 
 
     // set configs
     await monStaker.setMaxStake(1000, {from: accounts[0]});
-    await monStaker.setMaxMons(100, {from:accounts[0]});
 
     // set monStaker to be minter
-    await monMinter.setMinterRole(monStaker.address, {from: accounts[0]})
+    await monMinter.setMinterRole(monStaker.address, {from: accounts[0]});
+
+    // Set URIs
+    await monMinter.setBaseURI("test.com/", {from: accounts[0]});
+    await monStaker.setPrefixURI("staker/", {from: accounts[0]});
 
     /*
     - Set doomFee to be 100
     - A deposits 10 XMON tokens
+
     - Wait 5 blocks
-    - Ensure that claimMon reverts
+    - Ensure that claimMon reverts due to insufficient DOOM
     - Wait 5 more blocks
+    - Ensure that claimMon reverts due to maxMons too low 
+    - Sets maxMons to be high enough
     - Ensure that claimMon succeeds
     
     - Ensure totalSupply = 2
@@ -373,8 +353,10 @@ contract("monStaker tests", async accounts => {
 
     - Ensure that the claimed monster (lookup through monMinter) has:
     - summoner == A's address
-    - parent1 == 0
-    - parent2 == 0
+    - parent1Id == 0
+    - parent2Id == 0
+    - minterContract == monStaker.address
+    - contractOrder = 1
     - gen == 1
     - exp == 0
     - rarity == 1
@@ -390,18 +372,16 @@ contract("monStaker tests", async accounts => {
     - Ensure that the XMON address got the fee
     */
     await monStaker.setDoomFee(100, {from: accounts[0]});
+
     await monStaker.addStake(10, {from: accounts[0]});
     for (let i = 0; i < 4; i++) {
       await timeMachine.advanceBlock();
     }
-    await truffleAssert.reverts(
-      monStaker.claimMon()
-    );
     for (let i = 0; i < 4; i++) {
       await timeMachine.advanceBlock();
     }
 
-    let blockNum = await web3.eth.getBlockNumber();
+    await monStaker.setMaxMons(100, {from:accounts[0]});
 
     await monStaker.claimMon({from:accounts[0]});
     result = await monStaker.doomBalances(accounts[0]);
@@ -411,25 +391,36 @@ contract("monStaker tests", async accounts => {
     result = await monStaker.numMons();
     expect(result).to.eql(web3.utils.toBN(1));
 
+    let blockNum = await web3.eth.getBlockNumber();
+
     result = await monMinter.monRecords(1);
     expect(result["summoner"]).to.eql(accounts[0]);
-    expect(result["parent1"]).to.eql(web3.utils.toBN(0));
-    expect(result["parent2"]).to.eql(web3.utils.toBN(0));
+    expect(result["parent1Id"]).to.eql(web3.utils.toBN(0));
+    expect(result["parent2Id"]).to.eql(web3.utils.toBN(0));
+    expect(result["minterContract"].toString()).to.eql(monStaker.address.toString());
+    expect(result["contractOrder"]).to.eql(web3.utils.toBN(1));
     expect(result["gen"]).to.eql(web3.utils.toBN(1));
     expect(result["exp"]).to.eql(web3.utils.toBN(0));
     expect(result["rarity"]).to.eql(web3.utils.toBN(1));
+
+    // Check monster 1's URI
+    result = await monMinter.tokenURI(1);
+    expect(result.toString()).to.eql("test.com/staker/1");
 
     result = await monStaker.summonDelay(accounts[0]);
     let startDelay = await monStaker.startDelay();
     expect(result).to.eql(startDelay.mul(web3.utils.toBN(2)));
 
     result = await monStaker.nextSummonTime(accounts[0]);
-    blockNum = blockNum + 1;
     blockNum = web3.utils.toBN(blockNum).add(startDelay);
     expect(result.toString()).to.eql(blockNum.toString());
 
+    for (let i = 0; i < 11; i++) {
+      await timeMachine.advanceBlock();
+    }
     await truffleAssert.reverts(
-      monStaker.claimMon()
+      monStaker.claimMon(),
+      "Time isn't up yet"
     );
 
     await monStaker.removeStake({from: accounts[0]});
@@ -462,11 +453,7 @@ contract("monStaker tests", async accounts => {
 
     // init tx fee
     await xmon.setTransferFee(1, {from: accounts[0]});
-
-    // init xmon and monMinter contract references
-    await monStaker.setXMON(xmon.address, {from: accounts[0]});
-    await monStaker.setMonMinter(monMinter.address, {from: accounts[0]});
-
+    
     // approve stakers for A, B, and C
     await xmon.approve(monStaker.address, web3.utils.toBN('9999000000000000000000'), {from: accounts[0]}); 
     await xmon.approve(monStaker.address, web3.utils.toBN('9999000000000000000000'), {from: accounts[1]}); 

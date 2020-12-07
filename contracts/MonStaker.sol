@@ -3,35 +3,18 @@
 pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
-import "./IMonMinter.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./MonCreatorInstance.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 // reseterRole which can modify the summonDelay and doom balances
 
-contract MonStaker is AccessControl {
-
-  modifier onlyAdmin {
-    require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Not admin");
-    _;
-  }
-
-  modifier onlyStakerAdmin {
-    require(hasRole(STAKER_ADMIN_ROLE, msg.sender), "Not staker admin");
-    _;
-  }
+contract MonStaker is MonCreatorInstance {
 
   using SafeMath for uint256;
+  using Strings for uint256;
   using SafeERC20 for IERC20;
 
   bytes32 public constant STAKER_ADMIN_ROLE = keccak256("STAKER_ADMIN_ROLE");
-
-  IERC20 public xmon;
-  IMonMinter public monMinter;
-
-  uint256 public maxMons;
-  uint256 public numMons;
 
   uint256 public maxStake;
 
@@ -53,6 +36,9 @@ contract MonStaker is AccessControl {
   // initial rarity
   uint256 public rarity;
 
+  // maximum delay between summons
+  uint256 public maxDelay;
+
   // the amount of doom accrued by each account
   mapping(address => uint256) public doomBalances;
 
@@ -62,7 +48,12 @@ contract MonStaker is AccessControl {
   // the block at which each account can summon
   mapping(address => uint256) public nextSummonTime;
 
-  constructor() public {
+  modifier onlyStakerAdmin {
+    require(hasRole(STAKER_ADMIN_ROLE, msg.sender), "Not staker admin");
+    _;
+  }
+
+  constructor(address xmonAddress, address monMinterAddress) public {
 
     // Give caller admin permissions
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -73,17 +64,26 @@ contract MonStaker is AccessControl {
     // starting fee is 1 XMON to reset
     resetFee = 1 * (10**18);
 
-    // starting max stake of 5 XMON
-    maxStake = 5 * (10**18);
+    // starting max stake of 8 XMON
+    maxStake = 8 * (10**18);
 
-    // starting delay is 3000 blocks, ~12 hours
+    // starting delay is 3000 blocks, ~12 hours (assuming 6500 blocks a day)
     startDelay = 3000;
+
+    // max delay is 42,000 blocks, ~8 days
+    maxDelay = 48000;
 
     // starting maxMons is 256
     maxMons = 256;
 
     // starting rarity is 1
     rarity = 1;
+
+    // set xmon instance
+    xmon = IERC20(xmonAddress);
+
+    // set monMinter instance
+    monMinter = IMonMinter(monMinterAddress);
   }
 
   function addStake(uint256 amount) public {
@@ -158,7 +158,7 @@ contract MonStaker is AccessControl {
     // check conditions
     require(doomBalances[msg.sender] >= doomFee, "Not enough DOOM");
     require(block.number >= nextSummonTime[msg.sender], "Time isn't up yet");
-    require(numMons < maxMons, "All mons are out");
+    super.updateNumMons();
 
     // remove doom fee from caller's doom balance
     doomBalances[msg.sender] = doomBalances[msg.sender].sub(doomFee);
@@ -169,19 +169,36 @@ contract MonStaker is AccessControl {
     // double the delay time
     summonDelay[msg.sender] = summonDelay[msg.sender].mul(2);
 
-    // Update num mons count
-    numMons = numMons.add(1);
+    // set it to be maxDelay if that's lower
+    if (summonDelay[msg.sender] > maxDelay) {
+      summonDelay[msg.sender] = maxDelay;
+    }
 
     // mint the monster
     uint256 id = monMinter.mintMonster(
+      // to
       msg.sender,
+      // parent1Id
       0,
+      // parent2Id
       0,
+      // minterContract
+      address(this),
+      // contractOrder
+      numMons,
+      // gen
       1,
+      // bits
       uint256(blockhash(block.number.sub(1))),
+      // exp
       0,
+      // rarity
       rarity
     );
+
+    // update the URI of the new mon to be the prefix plus the numMons
+    string memory uri = string(abi.encodePacked(prefixURI, numMons.toString()));
+    monMinter.setTokenURI(id, uri);
 
     // return new monster id
     return(id);
@@ -195,28 +212,8 @@ contract MonStaker is AccessControl {
     xmon.safeTransferFrom(msg.sender, address(xmon), resetFee);
   }
 
-  function moveTokens(address tokenAddress, address to, uint256 numTokens) public onlyAdmin {
-    require(tokenAddress != address(xmon), "Can't move XMON");
-    IERC20 _token = IERC20(tokenAddress);
-    _token.safeTransfer(to, numTokens);
-  }
-
-  function setXMON(address tokenAddress) public onlyAdmin {
-    require(address(xmon) == address(0), "already set");
-    xmon = IERC20(tokenAddress);
-  }
-
-  function setMonMinter(address a) public onlyAdmin {
-    require(address(monMinter) == address(0), "already set");
-    monMinter = IMonMinter(a);
-  }
-
   function setRarity(uint256 r) public onlyAdmin {
     rarity = r;
-  }
-
-  function setMaxMons(uint256 m) public onlyAdmin {
-    maxMons = m;
   }
 
   function setMaxStake(uint256 m) public onlyAdmin {
@@ -235,9 +232,19 @@ contract MonStaker is AccessControl {
     doomFee = f;
   }
 
+  function setMaxDelay(uint256 d) public onlyAdmin {
+    maxDelay = d;
+  }
+
   // Allows admin to add new staker admins
   function setStakerAdminRole(address a) public onlyAdmin {
     grantRole(STAKER_ADMIN_ROLE, a);
+  }
+
+  function moveTokens(address tokenAddress, address to, uint256 numTokens) public onlyAdmin {
+    require(tokenAddress != address(xmon), "Can't move XMON");
+    IERC20 _token = IERC20(tokenAddress);
+    _token.safeTransfer(to, numTokens);
   }
 
   function setDoomBalances(address a, uint256 d) public onlyStakerAdmin {
@@ -247,6 +254,7 @@ contract MonStaker is AccessControl {
   function setSummonDelay(address a, uint256 d) public onlyStakerAdmin {
     summonDelay[a] = d;
   }
+  
 
   function pendingDoom(address a) public view returns(uint256) {
     uint256 doomAmount = stakeRecords[a].amount.mul(block.number.sub(stakeRecords[a].startBlock));
