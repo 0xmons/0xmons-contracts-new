@@ -25,7 +25,7 @@ abstract contract MonCreatorInstance is AccessControl {
     _;
   }
 
-  function updateNumMons() public {
+  function updateNumMons() internal {
     require(numMons < maxMons, "All mons are out");
     numMons = numMons.add(1);
   }

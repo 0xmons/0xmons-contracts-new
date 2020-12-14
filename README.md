@@ -5,7 +5,9 @@ The main contract is `MonMinter.sol`, which is the actual ERC-721 implementation
 
 `IMonMinter.sol` is the minter interface, which is exposed to contracts with minting privileges, allowing them to mint and modify the on-chain data of monsters.
 
-The default `Mon` struct is in `UsesMon.sol`. Contracts which want to access on-chain information about a monster inherit from this contract.
+The default `Mon` struct is in `UsesMon.sol`. Contracts which want to access on-chain information about a monster inherit from this contract to use the struct.
+
+`MonCreatorInstance` is a parent class that abstracts out some similarities among contracts which want to mint monsters.
 
 `MonStaker.sol` is the main staking contract. Users can add and remove their staked XMON to generate Doom, which is then used to redeem monsters. 
 

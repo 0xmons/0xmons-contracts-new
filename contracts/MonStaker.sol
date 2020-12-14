@@ -61,20 +61,14 @@ contract MonStaker is MonCreatorInstance {
     // Make the caller admin a staker admin
     grantRole(STAKER_ADMIN_ROLE, msg.sender);
 
-    // starting fee is 1 XMON to reset
+    // starting reset fee is 1 XMON to reset
     resetFee = 1 * (10**18);
 
-    // starting max stake of 8 XMON
-    maxStake = 8 * (10**18);
+    // starting delay is 6000 blocks, ~22 hours (assuming 6500 blocks a day)
+    startDelay = 6000;
 
-    // starting delay is 3000 blocks, ~12 hours (assuming 6500 blocks a day)
-    startDelay = 3000;
-
-    // max delay is 42,000 blocks, ~8 days
+    // max delay is 48,000 blocks, ~8 days
     maxDelay = 48000;
-
-    // starting maxMons is 256
-    maxMons = 256;
 
     // starting rarity is 1
     rarity = 1;

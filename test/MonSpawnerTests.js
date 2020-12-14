@@ -108,6 +108,9 @@ contract("monSpawner tests", async accounts => {
     // Set 1000 max mons
     await monStaker.setMaxMons(1000, {from: accounts[0]});
 
+    // Set maxStake
+    await monStaker.setMaxStake(10000000000000, {from: accounts[0]});
+
     // Claim 3 monsters
     await monStaker.addStake(10, {from: accounts[0]});
     await monStaker.claimMon({from: accounts[0]});

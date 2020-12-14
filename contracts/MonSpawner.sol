@@ -47,8 +47,8 @@ contract MonSpawner is MonCreatorInstance, UsesMon {
     // set monMinter instance
     monMinter = IMonMinter(monMinterAddress);
 
-    // spawnFee is 0.1 XMON to start
-    spawnFee = 0.1 * (10**18);
+    // spawnFee is 1 XMON to start
+    spawnFee = 1 * (10**18);
   }
 
   function spawnNewMon(uint256 mon1Id, uint256 mon2Id) public returns (uint256) {
