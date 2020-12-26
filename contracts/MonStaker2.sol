@@ -7,7 +7,7 @@ import "./MonCreatorInstance.sol";
 import "./IWhitelist.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract MonStaker is MonCreatorInstance {
+contract MonStaker2 is MonCreatorInstance {
 
   using SafeMath for uint256;
   using Strings for uint256;
@@ -23,29 +23,21 @@ contract MonStaker is MonCreatorInstance {
   }
   mapping(address => Stake) public stakeRecords;
 
-  // amount of doom needed to summon monster
-  uint256 public doomFee;
+  // amount of time an account has summoned
+  mapping(address => uint256) public numSummons;
 
-  // fee in XMON to pay to reset delay
-  uint256 public resetFee;
+  // the amount that gets added as a multiplier to numSummons
+  // summon fee in DOOM = numSummons * extraDoom + baseDoomFee
+  uint256 public doomMultiplier;
 
-  // starting delay
-  uint256 public startDelay;
-
-  // initial rarity
-  uint256 public rarity;
-
-  // maximum delay between summons
-  uint256 public maxDelay;
+  // amount of base doom needed to summon monster
+  uint256 public baseDoomFee;
 
   // the amount of doom accrued by each account
   mapping(address => uint256) public doomBalances;
 
-  // the additional delay between mintings for each account
-  mapping(address => uint256) public summonDelay;
-
-  // the block at which each account can summon
-  mapping(address => uint256) public nextSummonTime;
+  // initial rarity
+  uint256 public rarity;
 
   // the reference for checking if this contract is whitelisted
   IWhitelist private whitelistChecker;
@@ -56,21 +48,11 @@ contract MonStaker is MonCreatorInstance {
   }
 
   constructor(address xmonAddress, address monMinterAddress) public {
-
     // Give caller admin permissions
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
     // Make the caller admin a staker admin
     grantRole(STAKER_ADMIN_ROLE, msg.sender);
-
-    // starting reset fee is 1 XMON to reset
-    resetFee = 1 * (10**18);
-
-    // starting delay is 6000 blocks, ~22 hours (assuming 6500 blocks a day)
-    startDelay = 6000;
-
-    // max delay is 48,000 blocks, ~8 days
-    maxDelay = 48000;
 
     // starting rarity is 1
     rarity = 1;
@@ -104,11 +86,6 @@ contract MonStaker is MonCreatorInstance {
       newAmount,
       block.number
     );
-
-    // initialize the summonDelay if it's 0
-    if (summonDelay[msg.sender] == 0) {
-      summonDelay[msg.sender] = startDelay;
-    }
 
     // transfer tokens to contract
     xmon.safeTransferFrom(msg.sender, address(this), amount);
@@ -150,23 +127,11 @@ contract MonStaker is MonCreatorInstance {
     awardDoom(msg.sender);
 
     // check conditions
-    require(doomBalances[msg.sender] >= doomFee, "Not enough DOOM");
-    require(block.number >= nextSummonTime[msg.sender], "Time isn't up yet");
+    require(doomBalances[msg.sender] >= doomFee(msg.sender), "Not enough DOOM");
     super.updateNumMons();
 
     // remove doom fee from caller's doom balance
-    doomBalances[msg.sender] = doomBalances[msg.sender].sub(doomFee);
-
-    // update the next block where summon can happen
-    nextSummonTime[msg.sender] = summonDelay[msg.sender] + block.number;
-
-    // double the delay time
-    summonDelay[msg.sender] = summonDelay[msg.sender].mul(2);
-
-    // set it to be maxDelay if that's lower
-    if (summonDelay[msg.sender] > maxDelay) {
-      summonDelay[msg.sender] = maxDelay;
-    }
+    doomBalances[msg.sender] = doomBalances[msg.sender].sub(doomFee(msg.sender));
 
     // mint the monster
     uint256 id = monMinter.mintMonster(
@@ -194,16 +159,11 @@ contract MonStaker is MonCreatorInstance {
     string memory uri = string(abi.encodePacked(prefixURI, numMons.toString()));
     monMinter.setTokenURI(id, uri);
 
+    // update the number of summons
+    numSummons[msg.sender] = numSummons[msg.sender].add(1);
+
     // return new monster id
     return(id);
-  }
-
-  function resetDelay() public {
-    // set delay to the starting value
-    summonDelay[msg.sender] = startDelay;
-
-    // move tokens to the XMON contract as fee
-    xmon.safeTransferFrom(msg.sender, address(xmon), resetFee);
   }
 
   function setRarity(uint256 r) public onlyAdmin {
@@ -214,21 +174,12 @@ contract MonStaker is MonCreatorInstance {
     maxStake = m;
   }
 
-  function setStartDelay(uint256 s) public onlyAdmin {
-    startDelay = s;
+  function setBaseDoomFee(uint256 f) public onlyAdmin {
+    baseDoomFee = f;
   }
 
-  function setResetFee(uint256 f) public onlyAdmin {
-    resetFee = f;
-  }
-
-  function setDoomFee(uint256 f) public onlyAdmin {
-    doomFee = f;
-  }
-
-  function setMaxDelay(uint256 d) public onlyAdmin {
-    require(maxDelay >= startDelay, "maxDelay too low");
-    maxDelay = d;
+  function setDoomMultiplier(uint256 m) public onlyAdmin {
+    doomMultiplier = m;
   }
 
   // Allows admin to add new staker admins
@@ -246,16 +197,13 @@ contract MonStaker is MonCreatorInstance {
     doomBalances[a] = d;
   }
 
-  function setSummonDelay(address a, uint256 d) public onlyStakerAdmin {
-    summonDelay[a] = d;
-  }
-
-  function setNextSummonTime(address a, uint256 t) public onlyStakerAdmin {
-    nextSummonTime[a] = t;
-  }
-
   function pendingDoom(address a) public view returns(uint256) {
     uint256 doomAmount = stakeRecords[a].amount.mul(block.number.sub(stakeRecords[a].startBlock));
     return(doomAmount);
   }
+
+  function doomFee(address a) public view returns(uint256) {
+    return (numSummons[a].mul(doomMultiplier)).add(baseDoomFee);
+  }
+
 }
