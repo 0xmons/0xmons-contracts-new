@@ -64,6 +64,15 @@ contract("erc721Sender tests", async accounts => {
       let balance = await xmon.balanceOf(accounts[i]);
       expect(balance).to.eql(web3.utils.toBN(i+1));
     }
+
+    // Ensure second rewards don't increase balance
+    for (let i = 0; i < 5; i++) {
+      await erc721Sender.takeRewards(monMinter.address, i+1, xmon.address, {from: accounts[i]});
+    }
+    for (let i = 1; i < 5; i++) {
+      let balance = await xmon.balanceOf(accounts[i]);
+      expect(balance).to.eql(web3.utils.toBN(i+1));
+    }
   });
 
 });
