@@ -16,7 +16,7 @@ contract XMON is ERC20, Ownable {
 
   constructor() ERC20("XMON", "XMON") public {
     _mint(msg.sender, 10000 ether);
-    transferFee = 1;
+    transferFee = 0;
   }
 
   function setWhitelist(address a, bool b) public onlyOwner {

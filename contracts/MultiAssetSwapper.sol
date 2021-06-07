@@ -43,7 +43,7 @@ contract MultiAssetSwapper is ReentrancyGuard, ERC1155Receiver, IERC721Receiver 
   function onERC1155BatchReceived( address operator, address from, uint256[] calldata ids, uint256[] calldata values, bytes calldata data )
   external override returns(bytes4) {
         return this.onERC1155BatchReceived.selector;
-    }
+  }
 
   function _transferAsset(address a, uint256 amount, uint256 id, bool isERC20, address receiver) internal {
     // Normal ERC-20 transfer
