@@ -1,28 +1,22 @@
-// Just for testing
-let XMON = artifacts.require('./XMON.sol');
+const Test721Artifact = artifacts.require('./Test721.sol');
+const TestDistributorArtifact = artifacts.require('./TestDistributor.sol');
+const Test20Artifact = artifacts.require('./Test20.sol');
+const NFTLotteryPoolArtifact = artifacts.require('./NFTLotteryPool.sol');
+const NFTLotteryPoolFactoryArtifact = artifacts.require('./NFTLotteryPoolFactory.sol');
 
-let MonMinter = artifacts.require('./MonMinter.sol');
-let MonStaker = artifacts.require('./MonStaker2.sol');
-let MonSpawner = artifacts.require('./MonSpawner.sol');
-let DoomRewarder = artifacts.require('./DoomRewarder.sol');
-
-let testing = false;
-let live = !testing;
+const Regenz = artifacts.require('./Regenz.sol');
 
 module.exports = async(deployer) => {
+  await deployer.deploy(Test721Artifact);
+  await deployer.deploy(Test20Artifact);
+  await deployer.deploy(TestDistributorArtifact);
+  await deployer.deploy(NFTLotteryPoolArtifact);
+  await deployer.deploy(
+    NFTLotteryPoolFactoryArtifact, 
+    Test20Artifact.address, 
+    TestDistributorArtifact.address,
+    web3.utils.toWei('2', 'ether'),
+    NFTLotteryPoolArtifact.address);
 
-  // Just for testing
-  if (testing) {
-    await deployer.deploy(XMON);
-    await deployer.deploy(MonMinter);
-    await deployer.deploy(MonStaker, XMON.address, MonMinter.address);
-    await deployer.deploy(MonSpawner, XMON.address, MonMinter.address);
-    await deployer.deploy(DoomRewarder, MonStaker.address);
-  }
-
-  if (live) {
-    // await deployer.deploy(MonSpawner, '0x3aaDA3e213aBf8529606924d8D1c55CbDc70Bf74', '0x0427743df720801825a5c82e0582b1e915e0f750');
-    // await deployer.deploy(DoomRewarder, '0x0427743df720801825a5c82e0582b1e915e0f750');
-  }
-
+  await deployer.deploy(Regenz);
 }

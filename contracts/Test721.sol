@@ -6,11 +6,8 @@ contract Test721 is ERC721 {
 
   constructor() ERC721("Test721", "T721") public {}
 
-  uint256 id;
-
   function mint(address to) public {
-    id = id + 1;
-    _mint(to, id);
+    _mint(to, totalSupply()+1);
   }
 
 }
