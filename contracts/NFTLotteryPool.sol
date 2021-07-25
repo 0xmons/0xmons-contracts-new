@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./IDistributor.sol";
 import "./ILotteryReference.sol";
 
-// TODO: Add tokenURI function
+// TODO: Add tokenURI function for on-chain metadata SVG 
 // TODO: source it out to another function add it into the ILotteryReference
 
 contract NFTLotteryPool is ERC721BurnableUpgradeable, OwnableUpgradeable, ERC721Holder, ReentrancyGuard {
@@ -24,24 +24,13 @@ contract NFTLotteryPool is ERC721BurnableUpgradeable, OwnableUpgradeable, ERC721
 
   // Lottery vars
   address public prizeAddress;
-  uint256 private prizeId;
-  uint64 private startDate;
-  uint64 private endDate;
-  uint32 private minTicketsToSell;
-  uint32 private maxTickets;
-  uint32 private maxTicketsPerAddress;
-  uint256 private ticketPrice;
-
-  struct PoolParams {
-    address prizeAddress;
-    uint256 prizeId;
-    uint64 startDate;
-    uint64 endDate;
-    uint32 minTicketsToSell;
-    uint32 maxTickets;
-    uint32 maxTicketsPerAddress;
-    uint256 ticketPrice;
-  }
+  uint256 public prizeId;
+  uint64 public startDate;
+  uint64 public endDate;
+  uint32 public minTicketsToSell;
+  uint32 public maxTickets;
+  uint32 public maxTicketsPerAddress;
+  uint256 public ticketPrice;
 
   // Mutex for calling VRF
   bool public hasCalledVRF;
@@ -49,7 +38,6 @@ contract NFTLotteryPool is ERC721BurnableUpgradeable, OwnableUpgradeable, ERC721
   // Check if refunds are allowed
   bool public isRefundOpen;
 
-  // TODO: add IPFS metadata hash params
   function initialize(
     address _prizeAddress,
     uint256 _prizeId,
@@ -102,7 +90,8 @@ contract NFTLotteryPool is ERC721BurnableUpgradeable, OwnableUpgradeable, ERC721
       _burn(ids[i]);
       refundAmount = refundAmount.add(ticketPrice);
     }
-    payable(msg.sender).transfer(refundAmount);
+    (bool sent, bytes memory data) = msg.sender.call{value: refundAmount}("");
+    require(sent, "Transfer failed");
   }
 
   function refundOwnerAssets() public onlyOwner {
@@ -125,18 +114,7 @@ contract NFTLotteryPool is ERC721BurnableUpgradeable, OwnableUpgradeable, ERC721
   function claimETH() public onlyOwner {
     require(hasCalledVRF, "Must call VRF first");
     require(IERC721Enumerable(prizeAddress).ownerOf(prizeId) != address(RNG_DISTRIBUTOR), "No VRF yet");
-    payable(owner()).transfer(address(this).balance);
+    owner().call{value: address(this).balance}("");
   }
 
-  function getPoolParams() external view returns (uint256[7] memory) {
-    return [
-      prizeId,
-      startDate,
-      endDate,
-      minTicketsToSell,
-      maxTickets,
-      maxTicketsPerAddress,
-      ticketPrice
-    ];
-  }
 }

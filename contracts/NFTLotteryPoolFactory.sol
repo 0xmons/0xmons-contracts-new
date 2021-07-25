@@ -70,6 +70,6 @@ contract NFTLotteryPoolFactory is Ownable {
   }
 
   function claimETH() public onlyOwner {
-    payable(owner()).transfer(address(this).balance);
+    owner().call{value: address(this).balance}("");
   }
 }
