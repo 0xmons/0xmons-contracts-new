@@ -48,6 +48,8 @@ contract NFTLotteryPool is ERC721BurnableUpgradeable, OwnableUpgradeable, ERC721
     uint32 _maxTicketsPerAddress,
     uint256 _ticketPrice
   ) external initializer {
+    require(_endDate > _startDate, "Dates incorrect");
+    require(endDate <= startDate + 90 days, "Too long");
     __Ownable_init();
     __ERC721_init("NFT-LOTTERY", "LOTTO");
     __ERC721Burnable_init_unchained();
@@ -66,6 +68,7 @@ contract NFTLotteryPool is ERC721BurnableUpgradeable, OwnableUpgradeable, ERC721
   }
 
   function buyTickets(uint256 numTickets) public payable {
+    require(block.timestamp >= startDate, "Too early");
     require(balanceOf(msg.sender).add(numTickets) <= maxTicketsPerAddress, "Holding too many");
     require(totalSupply().add(numTickets) <= maxTickets, "Exceeds max supply");
     require(msg.value == ticketPrice.mul(numTickets), "Price incorrect");
@@ -77,7 +80,7 @@ contract NFTLotteryPool is ERC721BurnableUpgradeable, OwnableUpgradeable, ERC721
 
   function unlockRefund() public {
     require(block.timestamp > endDate + 7 days, "Too early");
-    require(IERC721Enumerable(prizeAddress).ownerOf(prizeId) == address(this), "Already VRFed");
+    require(!hasCalledVRF, "Already VRFed");
     isRefundOpen = true;
   }
 
