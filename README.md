@@ -1,5 +1,11 @@
 # 0xmons Smart Contracts
 
+## NOW:
+
+This repository is used as a monorepo for all smart contracts developed by me (0xmons). It previously only housed contracts used for the initial 0xmons NFT ecosystem, which is detailed below.
+
+## PREVIOUSLY:
+
 ### Architecture
 The main contract is `MonMinter.sol`, which is the actual ERC-721 implementation. Using AccessControl, we can assign different contracts to be monster minters. 
 
