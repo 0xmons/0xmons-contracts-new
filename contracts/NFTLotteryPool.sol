@@ -6,15 +6,13 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./IDistributor.sol";
 import "./ILotteryReference.sol";
+import "./ITokenURI.sol";
 
-// TODO: Add tokenURI function for on-chain metadata SVG 
-// TODO: source it out to another function add it into the ILotteryReference
-
-contract NFTLotteryPool is ERC721BurnableUpgradeable, OwnableUpgradeable, ERC721Holder, ReentrancyGuard {
+contract NFTLotteryPool is ERC721Upgradeable, OwnableUpgradeable, ERC721Holder, ReentrancyGuard {
 
   using SafeERC20 for IERC20;
 
@@ -48,11 +46,12 @@ contract NFTLotteryPool is ERC721BurnableUpgradeable, OwnableUpgradeable, ERC721
     uint32 _maxTicketsPerAddress,
     uint256 _ticketPrice
   ) external initializer {
-    require(_endDate > _startDate, "Dates incorrect");
-    require(endDate <= startDate + 90 days, "Too long");
+    require(_endDate > _startDate, "End is before start");
+    require(_minTicketsToSell > 0, "Min sell at least 1");
+    require(_minTicketsToSell <= _maxTickets, "Min greater than max");
+    require(_maxTicketsPerAddress >= 1, "Must be able to buy at least 1");
     __Ownable_init();
     __ERC721_init("NFT-LOTTERY", "LOTTO");
-    __ERC721Burnable_init_unchained();
     REFERENCE = ILotteryReference(msg.sender);
     LINK = IERC20(REFERENCE.LINK_ADDRESS());
     RNG_DISTRIBUTOR = IDistributor(REFERENCE.RNG_DISTRIBUTOR_ADDRESS());
@@ -120,4 +119,7 @@ contract NFTLotteryPool is ERC721BurnableUpgradeable, OwnableUpgradeable, ERC721
     owner().call{value: address(this).balance}("");
   }
 
+  function tokenURI(uint256 id) public view override returns (string memory) {
+    return ITokenURI(REFERENCE.masterTokenURI()).tokenURI(id);
+  }
 }

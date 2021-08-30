@@ -19,17 +19,26 @@ contract NFTLotteryPoolFactory is Ownable {
 
   uint256 public poolFee = 0.1 ether;
   address public template;
+  address public masterTokenURI;
 
-  event LotteryDeployed(address a);
+  event LotteryDeployed(address a, address deployer);
 
-  constructor(address _LINK_ADDRESS, address _RNG_DISTRIBUTOR_ADDRESS, uint256 _LINK_FEE, address _template) public {
+  constructor(
+    address _RNG_DISTRIBUTOR_ADDRESS, 
+    address _LINK_ADDRESS, 
+    uint256 _LINK_FEE, 
+    address _template, 
+    address _masterTokenURI
+  ) public {
     LINK_ADDRESS = _LINK_ADDRESS;
     RNG_DISTRIBUTOR_ADDRESS = _RNG_DISTRIBUTOR_ADDRESS;
     LINK_FEE = _LINK_FEE;
     template = _template;
+    masterTokenURI = _masterTokenURI;
   }
 
   function createNFTLotteryPool(
+    bytes32 salt,
     address _prizeAddress,
     uint256 _prizeId,
     uint64 _startDate,
@@ -39,10 +48,8 @@ contract NFTLotteryPoolFactory is Ownable {
     uint32 _maxTicketsPerAddress,
     uint256 _ticketPrice
   ) external payable returns (address) {
-    
     require(msg.value >= poolFee, "Pay fee");
-
-    INFTLotteryPool pool = INFTLotteryPool(ClonesUpgradeable.clone(template));
+    INFTLotteryPool pool = INFTLotteryPool(ClonesUpgradeable.cloneDeterministic(template, salt));
     pool.initialize(
       _prizeAddress,
       _prizeId,
@@ -61,8 +68,12 @@ contract NFTLotteryPoolFactory is Ownable {
     IERC721(_prizeAddress).safeTransferFrom(msg.sender, address(pool), _prizeId);
     IERC20(LINK_ADDRESS).safeTransferFrom(msg.sender, address(pool), LINK_FEE);
     
-    emit LotteryDeployed(address(pool));
+    emit LotteryDeployed(address(pool), msg.sender);
     return address(pool);
+  }
+
+  function getLotteryAddress(bytes32 salt) public view returns (address) {
+    return ClonesUpgradeable.predictDeterministicAddress(template, salt);
   }
 
   function updatePoolFee(uint256 f) public onlyOwner {
@@ -71,5 +82,9 @@ contract NFTLotteryPoolFactory is Ownable {
 
   function claimETH() public onlyOwner {
     owner().call{value: address(this).balance}("");
+  }
+
+  function setMasterTokenURI(address a) public onlyOwner {
+    masterTokenURI = a;
   }
 }
