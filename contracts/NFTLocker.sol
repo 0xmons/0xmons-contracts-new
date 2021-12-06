@@ -31,6 +31,7 @@ contract NFTLocker is ERC721Holder, ERC1155Holder {
   mapping(uint256 => ERC1155Lockup) public erc1155LockupMap;
 
   function create721Lockup(address nftAddress, uint64 endTime, uint256 nftId) public {
+    require(isEOA(msg.sender), "Owner must be EOA");
     counterFor721 += 1;
     erc721LockupMap[counterFor721] = ERC721Lockup(
       msg.sender,
@@ -42,6 +43,7 @@ contract NFTLocker is ERC721Holder, ERC1155Holder {
   }
 
   function create1155Lockup(address nftAddress, uint64 endTime, uint256 nftId, uint256 amount)  public {
+    require(isEOA(msg.sender), "Owner must be EOA");
     counterFor1155 += 1;
     erc1155LockupMap[counterFor1155] = ERC1155Lockup(
       msg.sender,
@@ -65,5 +67,13 @@ contract NFTLocker is ERC721Holder, ERC1155Holder {
     require(block.timestamp >= lockup.endTime, "Not time yet");
     IERC1155(lockup.nftAddress).safeTransferFrom(address(this), lockup.owner, lockup.nftId, lockup.amount, "");
     delete erc1155LockupMap[lockId];
+  }
+  
+  function isEOA(address _addr) private returns (bool isEOA) {
+    uint32 size;
+    assembly {
+      size := extcodesize(_addr)
+    }
+    return (size > 0);
   }
 }
